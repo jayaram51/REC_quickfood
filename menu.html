@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus Canteen - Online Food Order</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    body { box-sizing: border-box; }
+    .cart-badge { animation: bounce 0.3s ease-in-out; }
+    @keyframes bounce { 0%,100%{transform:scale(1);}50%{transform:scale(1.2);} }
+    .fade-in { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from {opacity:0;transform:translateY(10px);} to {opacity:1;transform:translateY(0);} }
+    .quote-animation { animation: fadeInUp 2s ease-out; }
+    @keyframes fadeInUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+</style>
+</head>
+<body class="bg-gradient-to-r from-orange-600 via-red-500 to-pink-500 min-h-screen">
+
+<!-- Header Section -->
+<header class="relative bg-gradient-to-r from-orange-600 via-red-500 to-pink-500 shadow-xl min-h-[750px] overflow-hidden">
+    <div class="absolute top-0 left-0 w-72 h-72 bg-yellow-300/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-pink-400/20 rounded-full blur-3xl translate-x-1/4 translate-y-1/4 animate-pulse"></div>
+
+    <div class="container mx-auto px-10 py-[100px] text-center relative z-10">
+        <div class="max-w-4xl mx-auto space-y-8">
+            <h2 class="text-3xl md:text-6xl font-bold text-white leading-tight">
+                Welcome to Your
+                <span class="text-yellow-300">Campus Kitchen</span>
+            </h2>
+            <div class="quote-animation bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+                <blockquote class="text-xl md:text-2xl text-white font-medium italic">
+                    "Friends, food, and campus vibes—the perfect recipe for unforgettable memories"
+                </blockquote>
+            </div>
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl mb-2">🕒</div>
+                    <h3 class="font-bold text-lg mb-1">Open Daily</h3>
+                    <p class="text-orange-100">8:00 AM - 4:00 PM</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl mb-2">💰</div>
+                    <h3 class="font-bold text-lg mb-1">Student Friendly</h3>
+                    <p class="text-orange-100">Affordable & Delicious</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl mb-2">🥗</div>
+                    <h3 class="font-bold text-lg mb-1">Fresh & Healthy</h3>
+                    <p class="text-orange-100">Made Daily with Love</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Floating Sticky Buttons -->
+<div class="flex flex-col md:flex-row gap-4 md:gap-6 justify-end items-end mt-6 mb-8 px-4">
+    <button id="ordersBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-3 md:px-6 md:py-3 rounded-full font-semibold shadow-lg transition-transform duration-200 transform hover:-translate-y-1 hover:scale-105 flex items-center justify-center gap-2">
+        📝 Orders
+        <span id="ordersBadge" class="hidden w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">0</span>
+    </button>
+    <button id="cartBtn" class="relative bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 md:px-6 md:py-3 rounded-full font-semibold shadow-lg transition-transform duration-200 transform hover:-translate-y-1 hover:scale-105 flex items-center justify-center gap-2">
+        🛒 Cart
+        <span id="cartCount" class="ml-2 font-bold">0</span>
+        <span id="cartBadge" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hidden"></span>
+    </button>
+</div>
+
+<!-- Menu Section -->
+<main class="max-w-6xl mx-auto px-4 py-8">
+    <div class="mb-8 flex flex-wrap gap-2 justify-center">
+        <button class="category-btn active bg-orange-500 text-white px-6 py-3 rounded-full font-semibold transition-all duration-200" data-category="all">All Items</button>
+        <button class="category-btn bg-white hover:bg-orange-100 text-gray-700 px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md" data-category="breakfast">🥪 Breakfast</button>
+        <button class="category-btn bg-white hover:bg-orange-100 text-gray-700 px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md" data-category="lunch">🍛 Lunch</button>
+        <button class="category-btn bg-white hover:bg-orange-100 text-gray-700 px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md" data-category="snacks">🍟 Snacks</button>
+        <button class="category-btn bg-white hover:bg-orange-100 text-gray-700 px-6 py-3 rounded-full font-semibold transition-all duration-200 shadow-md" data-category="beverages">🥤 Beverages</button>
+    </div>
+    <div id="menuGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-8"></div>
+</main>
+
+<!-- Cart Modal -->
+<div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col">
+            <div class="bg-orange-500 text-white p-6 flex justify-between items-center">
+                <h2 class="text-2xl font-bold">Your Order</h2>
+                <button id="closeCart" class="text-white hover:text-orange-200 text-2xl">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6">
+                <div id="cartItems" class="space-y-4"></div>
+                <div id="emptyCart" class="text-center py-8 text-gray-500">
+                    <div class="text-4xl mb-4">🛒</div>
+                    <p>Your cart is empty</p>
+                </div>
+            </div>
+            <div id="cartFooter" class="border-t p-6 bg-gray-50 flex-shrink-0 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xl font-bold">Total: ₹<span id="cartTotal">0</span></span>
+                </div>
+                <button id="proceedToPayment" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold transition-all duration-200">
+                    Proceed to Payment 💳
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col">
+            <div class="bg-blue-500 text-white p-6 flex justify-between items-center">
+                <h2 class="text-2xl font-bold">Scan & Pay</h2>
+                <button id="closePayment" class="text-white hover:text-blue-200 text-2xl">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="mb-6 text-center">
+                    <p class="text-gray-600 mb-2">Total Amount</p>
+                    <p class="text-3xl font-bold text-green-600">₹<span id="paymentTotal">0</span></p>
+                </div>
+                <div class="text-center mb-6">
+                    <div class="bg-gray-100 p-6 rounded-xl mb-4">
+                        <img src="qrcode.jpg" alt="QR Code">
+                        <p class="text-sm text-gray-600 mb-2">Scan with any UPI app</p>
+                        <p class="text-xs text-gray-500">PhonePe • Google Pay • Paytm • BHIM</p>
+                    </div>
+                    <p class="text-sm text-gray-600">Send payment screenshot to 9494122826</p>
+                </div>
+            </div>
+            <div class="border-t p-6 flex-shrink-0">
+                <button id="confirmPayment" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg font-semibold transition-all duration-200 mb-3">
+                    Confirm Payment & Place Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-2xl font-bold text-green-600 mb-4">Order Placed Successfully!</h2>
+            <p class="text-gray-600 mb-6">Your order will be ready in 15-20 minutes.</p>
+            <p class="text-sm text-gray-500 mb-6">Order ID: #<span id="orderId"></span></p>
+            <button id="closeSuccess" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold">
+                Continue Shopping
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Modal -->
+<div id="ordersModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col">
+            <div class="bg-blue-500 text-white p-6 flex justify-between items-center">
+                <h2 class="text-2xl font-bold">Completed Orders</h2>
+                <button id="closeOrders" class="text-white hover:text-blue-200 text-2xl">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="ordersList">
+                <p class="text-gray-500 text-center">Fetching completed orders...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// ===================== Firebase Configs =====================
+// Main Firebase (orders)
+const firebaseConfig = {
+    apiKey: "AIzaSyDuZXZx7DCRitt_4E2XIOmknhqHEUTUXL0",
+    authDomain: "student-326fc.firebaseapp.com",
+    databaseURL: "https://student-326fc-default-rtdb.firebaseio.com",
+    projectId: "student-326fc",
+    storageBucket: "student-326fc.firebasestorage.app",
+    messagingSenderId: "583442488877",
+    appId: "1:583442488877:web:db583172fc4594a11122a4"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Third Firebase (Completed Orders)
+const thirdFirebaseConfig = {
+    apiKey: "AIzaSyCGMvFT7bJjQVJGlU3qZdfZEq9W_jZpH8g",
+    authDomain: "checkorder-52699.firebaseapp.com",
+    databaseURL: "https://checkorder-52699-default-rtdb.firebaseio.com",
+    projectId: "checkorder-52699",
+    storageBucket: "checkorder-52699.firebasestorage.app",
+    messagingSenderId: "1001364469231",
+    appId: "1:1001364469231:web:46a2cd67ad8a738e7ef21a"
+};
+const thirdApp = initializeApp(thirdFirebaseConfig, "thirdApp");
+const thirdDB = getDatabase(thirdApp);
+
+// Fourth Firebase (Availability)
+const fourthFirebaseConfig = {
+    apiKey: "AIzaSyAO3rj5BVnuI0xgvVypjGSwCqZuiPiLIIE",
+    authDomain: "checkavailability-4daf3.firebaseapp.com",
+    databaseURL: "https://checkavailability-4daf3-default-rtdb.firebaseio.com",
+    projectId: "checkavailability-4daf3",
+    storageBucket: "checkavailability-4daf3.firebasestorage.app",
+    messagingSenderId: "12645745047",
+    appId: "1:12645745047:web:967328e3e812e412cf44d2"
+};
+const fourthApp = initializeApp(fourthFirebaseConfig, "fourthApp");
+const fourthDB = getDatabase(fourthApp);
+
+// ===================== Menu Items =====================
+const menuItems = [
+    {id:1,name:"puri",price:35,category:"breakfast",image:"puri.jpeg"},
+    {id:2,name:"idly",price:25,category:"breakfast",image:"idly.jpg"},
+    {id:3,name:"dosa",price:20,category:"breakfast",image:"dosa.webp"},
+    {id:4,name:"onion dosa",price:30,category:"breakfast",image:"egg dosa.jpeg"},
+    {id:5,name:"Fried rice",price:45,category:"lunch",image:"veg-fried-rice.jpg"},
+    {id:6,name:"Chicken Fried rice",price:55,category:"lunch",image:"chicken-fried-rice.webp"},
+    {id:7,name:"Veg Noodles",price:60,category:"lunch",image:"vegetable-noodles.jpg"},
+    {id:8,name:"Chicken Noodles",price:80,category:"lunch",image:"Chiken-noodles.jpeg"},
+    {id:9,name:"Samosa",price:15,category:"snacks",image:"Samosa.webp"},
+    {id:10,name:"Veg Puff",price:40,category:"snacks",image:"veg-puff.webp"},
+    {id:11,name:"Egg puff",price:25,category:"snacks",image:"egg-puff.jpg"},
+    {id:12,name:"Lays",price:35,category:"snacks",image:"lays.avif"},
+    {id:13,name:"Mountian-due",price:10,category:"beverages",image:"mountain-dew-.webp"},
+    {id:14,name:"Thumbs-up",price:15,category:"beverages",image:"thums-up.webp"},
+    {id:15,name:"Badam-Milk",price:25,category:"beverages",image:"Badam-milk.webp"},
+    {id:16,name:"Coco-cola",price:20,category:"beverages",image:"coco-cola.jpg"}
+];
+
+// ===================== DOM Elements =====================
+const menuGrid = document.getElementById('menuGrid');
+const cartBtn = document.getElementById('cartBtn');
+const cartModal = document.getElementById('cartModal');
+const cartItems = document.getElementById('cartItems');
+const cartCount = document.getElementById('cartCount');
+const cartTotal = document.getElementById('cartTotal');
+const cartFooter = document.getElementById('cartFooter');
+const emptyCart = document.getElementById('emptyCart');
+const paymentModal = document.getElementById('paymentModal');
+const successModal = document.getElementById('successModal');
+const orderId = document.getElementById('orderId');
+const paymentTotal = document.getElementById('paymentTotal');
+const confirmPaymentBtn = document.getElementById('confirmPayment');
+const ordersBtn = document.getElementById('ordersBtn');
+const ordersModal = document.getElementById('ordersModal');
+const closeOrders = document.getElementById('closeOrders');
+const ordersList = document.getElementById('ordersList');
+
+// ===================== Cart =====================
+let cart = [];
+let currentCategory = 'all';
+
+function renderMenu() {
+    menuGrid.innerHTML = '';
+    const filteredItems = currentCategory === 'all' ? menuItems : menuItems.filter(i=>i.category===currentCategory);
+    filteredItems.forEach(item => {
+        const card = document.createElement('div');
+        card.className = "bg-white/20 backdrop-blur-sm rounded-xl shadow-md overflow-hidden hover:scale-105 transition-transform duration-200";
+        card.innerHTML = `
+            <img src="${item.image}" alt="${item.name}" class="w-full h-40 object-cover">
+            <div class="p-4">
+                <h3 class="font-bold text-lg text-white mb-2">${item.name}</h3>
+                <p class="text-white font-semibold mb-4">₹${item.price}</p>
+                <button class="addBtn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg w-full font-semibold" data-id="${item.id}">Add to Cart</button>
+            </div>
+        `;
+        menuGrid.appendChild(card);
+    });
+}
+
+function updateCartUI() {
+    cartItems.innerHTML = '';
+    if(cart.length === 0){
+        emptyCart.classList.remove('hidden');
+        cartFooter.classList.add('hidden');
+        cartCount.textContent = 0;
+    } else {
+        emptyCart.classList.add('hidden');
+        cartFooter.classList.remove('hidden');
+        cartCount.textContent = cart.reduce((sum,i)=>sum+i.quantity,0);
+        cartTotal.textContent = cart.reduce((sum,i)=>sum+i.price*i.quantity,0);
+        paymentTotal.textContent = cart.reduce((sum,i)=>sum+i.price*i.quantity,0);
+
+        cart.forEach(item=>{
+            const div = document.createElement('div');
+            div.className = "flex justify-between items-center text-white bg-orange-500/20 rounded-lg p-3";
+            div.innerHTML = `
+                <div>
+                    <p class="font-bold">${item.name}</p>
+                    <p>₹${item.price} x ${item.quantity}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="decBtn px-2 bg-red-600 rounded">-</button>
+                    <button class="incBtn px-2 bg-green-600 rounded">+</button>
+                </div>
+            `;
+            const decBtn = div.querySelector('.decBtn');
+            const incBtn = div.querySelector('.incBtn');
+            decBtn.addEventListener('click',()=>{
+                item.quantity--;
+                if(item.quantity<=0){
+                    cart = cart.filter(i=>i.id!==item.id);
+                }
+                updateCartUI();
+            });
+            incBtn.addEventListener('click',()=>{
+                item.quantity++;
+                updateCartUI();
+            });
+            cartItems.appendChild(div);
+        });
+    }
+}
+
+// ===================== Add to Cart with Availability Check =====================
+document.addEventListener('click', async (e) => {
+    if(e.target.classList.contains('addBtn')){
+        const id = parseInt(e.target.dataset.id);
+        const item = menuItems.find(i=>i.id===id);
+
+        // Check availability in fourth Firebase
+        try {
+            const snapshot = await get(ref(fourthDB, `availability/${item.name}`));
+            const available = snapshot.exists() ? snapshot.val() : false;
+            if(!available){
+                alert(`${item.name} is currently unavailable!`);
+                return;
+            }
+        } catch(err) {
+            console.error("Availability check error:", err);
+            alert("Unable to check availability. Try again later.");
+            return;
+        }
+
+        // Add to cart
+        const cartItem = cart.find(i=>i.id===id);
+        if(cartItem){
+            cartItem.quantity++;
+        } else {
+            cart.push({...item, quantity:1});
+        }
+        updateCartUI();
+    }
+});
+
+// ===================== Cart Modal =====================
+cartBtn.addEventListener('click',()=>cartModal.classList.remove('hidden'));
+document.getElementById('closeCart').addEventListener('click',()=>cartModal.classList.add('hidden'));
+document.getElementById('proceedToPayment').addEventListener('click',()=>{
+    if(cart.length===0) return;
+    cartModal.classList.add('hidden');
+    paymentModal.classList.remove('hidden');
+});
+
+// ===================== Payment Confirmation =====================
+confirmPaymentBtn.addEventListener('click', ()=>{
+    const orderNumber = Math.floor(Math.random()*10000)+1000;
+    orderId.textContent = orderNumber;
+
+    const orderData = {
+        items: cart.map(i=>({name:i.name,price:i.price,quantity:i.quantity,total:i.price*i.quantity})),
+        totalAmount: cart.reduce((sum,i)=>sum+i.price*i.quantity,0),
+    };
+
+    // Save to main Firebase
+    set(ref(db,"orders/"+orderNumber), orderData);
+
+    // Upload to fourth Firebase for availability check
+    const cartRef = ref(fourthDB, "pendingAvailability/" + orderNumber);
+    const cartData = cart.map(item=>({name:item.name,quantity:item.quantity,price:item.price}));
+    set(cartRef, {items: cartData, timestamp: Date.now()});
+
+    // Save to third Firebase (Completed Orders)
+    set(ref(thirdDB,"completedOrders/"+orderNumber), orderData);
+
+    cart = [];
+    updateCartUI();
+    paymentModal.classList.add('hidden');
+    successModal.classList.remove('hidden');
+});
+
+document.getElementById('closeSuccess').addEventListener('click',()=>successModal.classList.add('hidden'));
+
+// ===================== Orders Modal =====================
+ordersBtn.addEventListener('click', async ()=>{
+    ordersModal.classList.remove('hidden');
+    ordersList.innerHTML = '';
+    try{
+        const snapshot = await get(ref(thirdDB,"completedOrders"));
+        if(snapshot.exists()){
+            const orders = snapshot.val();
+            Object.keys(orders).forEach(key=>{
+                const div = document.createElement('div');
+                div.className = "p-4 bg-green-100 rounded-lg";
+                div.innerHTML = `<p class="font-bold">Order #${key}</p>
+                                 <p>Total: ₹${orders[key].totalAmount}</p>`;
+                ordersList.appendChild(div);
+            });
+        } else {
+            ordersList.innerHTML = '<p class="text-gray-500 text-center">No completed orders</p>';
+        }
+    } catch(err){
+        ordersList.innerHTML = '<p class="text-red-500 text-center">Error fetching orders</p>';
+    }
+});
+closeOrders.addEventListener('click',()=>ordersModal.classList.add('hidden'));
+
+// ===================== Category Buttons =====================
+document.querySelectorAll('.category-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        document.querySelectorAll('.category-btn').forEach(b=>b.classList.remove('active','bg-orange-500','text-white'));
+        btn.classList.add('active','bg-orange-500','text-white');
+        currentCategory = btn.dataset.category;
+        renderMenu();
+    });
+});
+
+// ===================== Initial Render =====================
+renderMenu();
+updateCartUI();
+
+</script>
+</body>
+</html>
